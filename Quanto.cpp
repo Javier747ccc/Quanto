@@ -17,6 +17,11 @@ using namespace std;
 
 #define pi 3.14159265358979323846264
 
+string StringToUpper(string strToConvert)
+{
+	std::transform(strToConvert.begin(), strToConvert.end(), strToConvert.begin(), ::toupper);
+	return strToConvert;
+}
 class point3D
 {
 private:
@@ -120,7 +125,7 @@ class Quantum
     
         map<string, QuantumReg> qregs;
         map<string, int> cregs;
-        const vector<string> FindRegBracketArgs(string s)
+		const vector<string> FindRegBracketArgs(string s)
         {
             vector<string> v;
             
@@ -160,6 +165,7 @@ class Quantum
         void executeZReg(string s);
         void executeCU1(string angle, string s);
 		void executeSwap(string s);
+		void executeMeasure(string s);
 };
 std::string trim(const std::string& str,
 	const std::string& whitespace = " \t")
@@ -222,6 +228,7 @@ void Quantum::executeXReg(string s)
 {
     const vector<string> &v = FindRegBracketArgs(s);
     qregs[v[0]].addAlpha(180);
+	point3D p = qregs[v[0]].getBlochSpherePoint();
 }
 void Quantum::executeYReg(string s)
 {
@@ -250,7 +257,16 @@ void Quantum::executeSwap(string s)
 
 	}
 }
+void Quantum::executeMeasure(string s)
+{
+	const vector<string>& v = FindRegBracketArgs(s);
+	if (v.size() == 2)
+	{
+		//swap(qregs[v[0]], qregs[v[1]]);
+		int a = 0;
 
+	}
+}
 void Quantum::executeCU1(string angle, string s)
 {
     const vector<string>& v = FindRegBracketArgs(s);
@@ -277,6 +293,10 @@ void Quantum::executeCU1(string angle, string s)
 						}
 					}
 					qregs[v[1]].addGamma(a / frac);
+
+					point3D p = qregs[v[1]].getBlochSpherePoint();
+					cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p.getY()) *(180.0/pi)<< endl;
+					int a = 0;
 				}
 				else
 				{
@@ -302,6 +322,7 @@ void Pruebas()
     string str = "q[1],q[0]";
 	
 	QuantumReg reg;
+
 	
 
 	reg.rotateY((-90*pi)/180);
@@ -327,6 +348,7 @@ void Pruebas()
 }
 int main(int argc, char *argv[])
 {
+
     //Pruebas();
     std::string arg1="";
 
@@ -376,6 +398,10 @@ int main(int argc, char *argv[])
 				else if (match.str(1) == "swap")
 				{
 					Q.executeSwap(match.str(3));
+				}
+				else if (match.str(1) == "measure")
+				{
+					Q.executeMeasure(match.str(3));
 				}
                 else if (match.str(1) == "OPENQASM")
                 {
