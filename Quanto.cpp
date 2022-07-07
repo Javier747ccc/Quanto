@@ -2,6 +2,7 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>  
 #include <string>
 #include <sstream>
@@ -12,6 +13,7 @@
 #include <string>
 #include <math.h>
 #include <string>
+#include <clocale>
 
 using namespace std;
 
@@ -125,6 +127,7 @@ class Quantum
     
         map<string, QuantumReg> qregs;
         map<string, int> cregs;
+		int numberQRegs;
 		const vector<string> FindRegBracketArgs(string s)
         {
             vector<string> v;
@@ -156,7 +159,7 @@ class Quantum
             return v;
         }
     public:
-        Quantum() {};
+		Quantum() { numberQRegs = 0; };
         void executeH(string x);
         void executeQReg(string s);
         void executeCReg(string s);
@@ -194,7 +197,7 @@ void Quantum::executeQReg(string s)
                 name << match.str(1) << i;
                 QuantumReg qreg;
                 
-
+				numberQRegs++;
                 qregs.insert(std::make_pair(name.str(), qreg));
             }
         }
@@ -274,35 +277,70 @@ void Quantum::executeCU1(string angle, string s)
 	{
 		if (v.size() > 1)
 		{
-			if (qregs[v[1]].getBlochSpherePoint().getZ() > 0)
+			double a = 0;
+			int frac = 1;
+			std::regex re("\\((\\w*)+\\/?(\\d*)?\\)");
+			std::smatch match;
+			angle.erase(remove_if(angle.begin(), angle.end(), ::isspace), angle.end());
+			if (std::regex_search(angle, match, re) && match.size() > 1)
 			{
-
-				double a = 0;
-				int frac = 1;
-				std::regex re("\\((\\w*)+\\/?(\\d*)?\\)");
-				std::smatch match;
-				angle.erase(remove_if(angle.begin(), angle.end(), ::isspace), angle.end());
-				if (std::regex_search(angle, match, re) && match.size() > 1)
+				if (match.length() > 2)
 				{
-					if (match.length() > 2)
+					if (match.str(1) == "pi")
 					{
-						if (match.str(1) == "pi")
-						{
-							a = 180;
-							frac = stod(match.str(2));
-						}
+						a = 180;
+						frac = stod(match.str(2));
 					}
-					qregs[v[1]].addGamma(a / frac);
+				}
+				point3D p1 = qregs[v[0]].getBlochSpherePoint();
 
-					point3D p = qregs[v[1]].getBlochSpherePoint();
-					cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p.getY()) *(180.0/pi)<< endl;
-					int a = 0;
+				int nCaras = pow(2, numberQRegs);
+
+				double sel = 1.0 - (p1.getZ() + 1.0) /2;
+
+				int r = (rand() % nCaras) + 1;
+					
+				std::locale::global(std::locale("spanish"));
+
+				cout << "El sistema de probabilidades está en " << std::fixed << std::setprecision(0) << sel * 100 << "%" << endl;
+				int sel_dado = (sel * nCaras) + 1;
+
+				if ((sel != 1)&&(sel!=0))
+				{
+					cout << "Por tanto si el dado obtiene un valor entre el 1 y el " << sel * nCaras << " el resultado será POSITIVO" << endl;
+					cout << "si por el contratio, el dado obtiene un valor entre el " << (sel * nCaras) + 1 << " y el " << nCaras << " el resultado será NEGATIVO" << endl;
+					cout << "El dado de " << nCaras << "  caras lanzado ha obtenido un " << r << endl;
+				}
+				else 
+				{
+					cout << "QUBIT : " << StringToUpper(v[0]) << " Tiene un valor de " << sel << endl;
+				}
+					
+				if (r < sel_dado)
+				{
+					cout << "El resultado es Positivo" << endl;
+					cout << "puerta de control abierta " << endl;
+					qregs[v[1]].addGamma(a / frac);
+					p1 = qregs[v[1]].getBlochSpherePoint();
+					cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p1.getY()) *(180.0/pi)<< endl;
+
 				}
 				else
 				{
-					throw;
+					cout << "El resultado es Negativo";
+					cout << "puerta de control Cerrada" << endl;
 				}
+
+					
+				//point3D p2 = qregs[v[1]].getBlochSpherePoint();
+				//cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p2.getY()) *(180.0/pi)<< endl;
+				int a = 0;
 			}
+			else
+			{
+				throw;
+			}
+			
 		}
 		else
 		{
@@ -348,7 +386,8 @@ void Pruebas()
 }
 int main(int argc, char *argv[])
 {
-
+	srand((unsigned)time(0));
+	setlocale(LC_ALL, "es_ES");
     //Pruebas();
     std::string arg1="";
 
