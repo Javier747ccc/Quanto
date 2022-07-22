@@ -277,8 +277,9 @@ void Quantum::executeCU1(string angle, string s)
 	{
 		if (v.size() > 1)
 		{
-			double a = 0;
+			double aa = 0;
 			int frac = 1;
+
 			std::regex re("\\((\\w*)+\\/?(\\d*)?\\)");
 			std::smatch match;
 			angle.erase(remove_if(angle.begin(), angle.end(), ::isspace), angle.end());
@@ -288,7 +289,7 @@ void Quantum::executeCU1(string angle, string s)
 				{
 					if (match.str(1) == "pi")
 					{
-						a = 180;
+						aa = 180;
 						frac = stod(match.str(2));
 					}
 				}
@@ -320,15 +321,20 @@ void Quantum::executeCU1(string angle, string s)
 				{
 					cout << "El resultado es Positivo" << endl;
 					cout << "puerta de control abierta " << endl;
-					qregs[v[1]].addGamma(a / frac);
+					qregs[v[1]].addGamma(aa / frac);
 					p1 = qregs[v[1]].getBlochSpherePoint();
-					cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p1.getY()) *(180.0/pi)<< endl;
+					if (frac > 0)
+						cout << "mover " << StringToUpper(v[1]) << " , " << nCaras / (frac * 2) << " posiciones hacia arriba" << endl;
+					if (frac < 0)
+						cout << "mover " << StringToUpper(v[1]) << " , " << nCaras / (frac * 2) << " posiciones hacia abajo" << endl;
+					int a = 0;
+					//cout << "Poner " << StringToUpper(v[1]) << " en posicion: " << asin( p1.getY()) *(180.0/pi)<< endl;
 
 				}
 				else
 				{
 					cout << "El resultado es Negativo";
-					cout << "puerta de control Cerrada" << endl;
+					cout << ", puerta de control Cerrada" << endl;
 				}
 
 					
